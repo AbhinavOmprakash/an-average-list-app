@@ -1,19 +1,21 @@
 (ns user
   "Userspace functions you can run by default in your local REPL."
   (:require
-   [an-average-list-app.config :refer [env]]
-    [clojure.pprint]
-    [clojure.spec.alpha :as s]
-    [expound.alpha :as expound]
-    [mount.core :as mount]
+    [an-average-list-app.config :refer [env]]
     [an-average-list-app.core :refer [start-app]]
     [an-average-list-app.db.core]
+    [clojure.pprint]
+    [clojure.spec.alpha :as s]
     [conman.core :as conman]
-    [luminus-migrations.core :as migrations]))
+    [expound.alpha :as expound]
+    [luminus-migrations.core :as migrations]
+    [mount.core :as mount]))
+
 
 (alter-var-root #'s/*explain-out* (constantly expound/printer))
 
 (add-tap (bound-fn* clojure.pprint/pprint))
+
 
 (defn start
   "Starts application.
@@ -21,16 +23,19 @@
   []
   (mount/start-without #'an-average-list-app.core/repl-server))
 
+
 (defn stop
   "Stops application."
   []
   (mount/stop-except #'an-average-list-app.core/repl-server))
+
 
 (defn restart
   "Restarts application."
   []
   (stop)
   (start))
+
 
 (defn restart-db
   "Restarts database."
@@ -40,20 +45,24 @@
   (binding [*ns* (the-ns 'an-average-list-app.db.core)]
     (conman/bind-connection an-average-list-app.db.core/*db* "sql/queries.sql")))
 
+
 (defn reset-db
   "Resets database."
   []
   (migrations/migrate ["reset"] (select-keys env [:database-url])))
+
 
 (defn migrate
   "Migrates database up for all outstanding migrations."
   []
   (migrations/migrate ["migrate"] (select-keys env [:database-url])))
 
+
 (defn rollback
   "Rollback latest database migration."
   []
   (migrations/migrate ["rollback"] (select-keys env [:database-url])))
+
 
 (defn create-migration
   "Create a new up and down migration file with a generated timestamp and `name`."
@@ -61,3 +70,7 @@
   (migrations/create name (select-keys env [:database-url])))
 
 
+(comment 
+  (start)
+
+  (create-migration "add-initial-data") ) ; nil
